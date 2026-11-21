@@ -5,12 +5,12 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/معماری-P2P-2563EB?style=flat-square" />
-  <img src="https://img.shields.io/badge/ارتباط-WebRTC-8B5CF6?style=flat-square" />
-  <img src="https://img.shields.io/badge/شبکه-Trystero-0F766E?style=flat-square" />
-  <img src="https://img.shields.io/badge/رابط-Vanilla%20JavaScript-F7DF1E?style=flat-square" />
-  <img src="https://img.shields.io/badge/بک‌اند-بدون%20نیاز-16A34A?style=flat-square" />
-  <img src="https://img.shields.io/badge/رابط%20کاربری-واکنش‌گرا-64748B?style=flat-square" />
+  <img src="https://img.shields.io/badge/Architecture-P2P-2563EB?style=flat-square" />
+  <img src="https://img.shields.io/badge/Communication-WebRTC-8B5CF6?style=flat-square" />
+  <img src="https://img.shields.io/badge/Networking-Trystero-0F766E?style=flat-square" />
+  <img src="https://img.shields.io/badge/Frontend-Vanilla%20JavaScript-F7DF1E?style=flat-square" />
+  <img src="https://img.shields.io/badge/Backend-Not%20Required-16A34A?style=flat-square" />
+  <img src="https://img.shields.io/badge/UI-Responsive-64748B?style=flat-square" />
 </p>
 
 ---
