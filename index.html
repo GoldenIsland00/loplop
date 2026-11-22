@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" id="htmlRoot">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
@@ -39,6 +39,13 @@
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;
     }
+    body.ltr { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    body.ltr .room-item { text-align: left; }
+    body.ltr .message.own { align-self: flex-end; border-bottom-right-radius: 16px; border-bottom-left-radius: 4px; }
+    body.ltr .message.other { align-self: flex-start; border-bottom-left-radius: 16px; border-bottom-right-radius: 4px; }
+    body.ltr .message .time { text-align: right; }
+    body.ltr .sidebar { border-left: none; border-right: 1px solid var(--border); }
+    body.ltr .emoji-pop { right: auto; left: 12px; }
     body {
       font-family: 'Vazirmatn', 'Tahoma', system-ui, sans-serif;
       background: var(--bg);
@@ -688,6 +695,7 @@
     <aside class="sidebar" id="sidebar">
       <div class="logo"><span>🔒 چت امن P2P</span>
         <div style="display:flex;gap:4px;align-items:center">
+          <button class="icon-btn btn-outline" id="langBtn" title="Language / زبان">EN</button>
           <button class="icon-btn btn-outline" id="docsBtn" title="مستندات فنی">📖</button>
           <button class="icon-btn btn-outline" id="settingsBtn" title="تنظیمات TURN و اعلان">⚙️</button>
           <button class="icon-btn btn-outline only-mobile" id="closeSidebar" title="بستن">✕</button>
@@ -983,7 +991,391 @@
     const APP_ID = 'secure-p2p-chat-full-v1';
     const LOBBY_ID = '__lobby__';
     const MAX_FILE = 50 * 1024 * 1024;
-    const BASE_TITLE = document.title;
+
+    /* ========== i18n (Persian / English) ========== */
+    const I18N = {
+      fa: {
+        title: 'LOP LOP| پرنده بازیگوش',
+        splashTitle: '🔒 چت امن P2P',
+        splashSub: 'در حال آماده‌سازی...',
+        fabNew: 'اتاق جدید',
+        fabJoin: 'ورود به اتاق',
+        fabDiscover: 'کشف اتاق‌ها',
+        bnRooms: 'اتاق‌ها',
+        bnChat: 'چت',
+        bnMedia: 'تماس',
+        bnMore: 'بیشتر',
+        logo: '🔒 چت امن P2P',
+        docsTitle: 'مستندات فنی',
+        settingsTitle: 'تنظیمات TURN و اعلان',
+        close: 'بستن',
+        nicknameLabel: 'نام مستعار شما',
+        nicknamePh: 'مثلاً: علی',
+        newRoom: '＋ اتاق جدید',
+        joinByName: 'ورود با نام',
+        tabMine: 'اتاق‌های من',
+        tabDiscover: 'کشف اتاق‌ها',
+        searchPh: '🔍 جستجوی اتاق...',
+        lobbyOff: 'لابی خاموش است',
+        lobbyOn: 'لابی روشن است',
+        lobbyToggleOn: 'روشن',
+        lobbyToggleOff: 'خاموش',
+        infoBox: '🛡️ پیام‌ها مستقیم بین مرورگرها (P2P) و رمزنگاری‌شده می‌روند. اتاق‌های «خصوصی» هرگز در لیست عمومی نمایش داده نمی‌شوند.',
+        noRoom: 'هنوز وارد اتاقی نشدی',
+        offline: 'آفلاین',
+        rooms: 'اتاق‌ها',
+        emailInvite: 'دعوت با ایمیل',
+        copyLink: 'کپی لینک اتاق',
+        participants: 'شرکت‌کنندگان و تماس',
+        leave: 'خروج از این اتاق',
+        replyTo: 'پاسخ به',
+        cancel: 'لغو',
+        msgPh: 'پیامت را بنویس...',
+        emoji: 'ایموجی',
+        voice: 'ضبط ویس',
+        send: 'ارسال',
+        recording: 'در حال ضبط...',
+        stopSend: 'توقف و ارسال',
+        ready: 'آماده برای اتصال...',
+        users: '👥 شرکت‌کنندگان',
+        enterRoomHint: 'وارد یک اتاق شو',
+        mic: 'میکروفون',
+        cam: 'دوربین',
+        screen: 'اشتراک صفحه',
+        you: 'تو',
+        anon: 'ناشناس',
+        deleted: 'این پیام حذف شد',
+        newMsgs: '—— پیام‌های جدید ——',
+        welcomeH1: 'چت امن P2P',
+        welcomeP: 'متن • ویس • فایل • صوت و تصویر گروهی — بدون سرور، مستقیم بین مرورگرها.<br>یک اتاق انتخاب کن یا اتاق خودت را بساز.',
+        createRoom: '＋ ساخت اتاق جدید',
+        joinRoom: 'ورود با نام اتاق',
+        onlineN: n => `${n} نفر آنلاین`,
+        connected: (n) => `متصل • ${n} نفر`,
+        statusRoom: (id, turn) => `اتاق «${id}» — ${turn ? 'TURN فعال' : 'P2P مستقیم'} • پیام‌ها رمزنگاری‌شده`,
+        visPublic: '🌐 عمومی',
+        visPrivate: '🔒 خصوصی',
+        visPass: '🔑 رمزدار',
+        banConfirm: name => `«${name}» بن شود؟`,
+        banned: name => `${name} بن شد`,
+        banErr: e => 'خطا در بن: ' + e,
+        leaveConfirm: title => `از اتاق «${title}» خارج می‌شوی؟ تاریخچه پیام‌های این نشست پاک می‌شود.`,
+        needRoomName: 'نام اتاق را وارد کن',
+        joinErr: e => 'خطا در اتصال به اتاق: ' + e,
+        bannedYou: r => 'شما از این اتاق بن شده‌اید' + (r ? ': ' + r : ''),
+        roomFull: 'اتاق پر است (حداکثر اعضا رسیده)',
+        lobbyFail: 'اتصال به لابی ممکن نشد',
+        micCamFail: e => 'دسترسی به میکروفون/دوربین ممکن نشد: ' + e,
+        screenFail: e => 'اشتراک صفحه ممکن نشد: ' + e,
+        voiceFail: 'ارسال ویس ناموفق بود',
+        micDenied: 'دسترسی به میکروفون برای ویس داده نشد',
+        fileMax: 'حداکثر حجم فایل ۵۰ مگابایت است',
+        fileFail: 'ارسال فایل ناموفق بود',
+        editPrompt: 'ویرایش پیام:',
+        langBtn: 'EN',
+        // room modal common
+        roomModalNew: 'اتاق جدید',
+        roomModalJoin: 'ورود به اتاق',
+        roomName: 'نام اتاق',
+        roomNamePh: 'مثلاً: دوستان',
+        password: 'رمز عبور (اختیاری)',
+        visibility: 'نمایش',
+        visPub: 'عمومی',
+        visPrv: 'خصوصی',
+        asAdmin: 'من ادمین باشم (بن و محدودیت اعضا)',
+        maxUsers: 'حداکثر اعضا (اختیاری)',
+        create: 'ساخت و ورود',
+        join: 'ورود',
+        // settings
+        settingsH: '⚙️ تنظیمات اتصال و اعلان',
+        turnLabel: 'سرور TURN (برای شبکه‌های محدود / موبایل اپراتوری)',
+        turnUser: 'نام کاربری TURN',
+        turnPass: 'رمز TURN',
+        forceRelay: 'اجبار به Relay (فقط از TURN استفاده شود — تست)',
+        enableNotif: 'اعلان دسکتاپ برای پیام جدید',
+        enableSound: 'صدای پیام جدید',
+        maxMembers: 'حداکثر تعداد اعضا در اتاق جدید (خالی = بدون محدودیت)',
+        save: 'ذخیره',
+        // invite
+        inviteH: 'دعوت به اتاق',
+        invEmail: 'ایمیل دوست',
+        invMsg: 'پیام (اختیاری)',
+        invPwWarn: 'ایمیل معمولاً امن نیست. بهتر است رمز را از کانال دیگری (مثلاً پیام‌رسان) برای دوستتان بفرستید.',
+        invLink: 'لینک اتاق',
+        invMailto: '📧 برنامه ایمیل',
+        invCopy: '📋 کپی لینک',
+        invShare: '📤 اشتراک‌گذاری (پیام‌رسان‌ها...)',
+        invInfo: 'این برنامه سرور ندارد؛ ایمیل با برنامه یا حساب خودتان ارسال می‌شود و فقط پیش‌نویس آماده می‌شود.',
+        copied: 'کپی شد',
+        emptyRooms: 'اتاقی نیست. یکی بساز یا وارد شو.',
+        emptyDiscover: 'اتاقی برای کشف پیدا نشد. لابی را روشن کن یا بعداً دوباره امتحان کن.',
+      },
+      en: {
+        title: 'LOP LOP | Playful Bird',
+        splashTitle: '🔒 Secure P2P Chat',
+        splashSub: 'Getting ready...',
+        fabNew: 'New room',
+        fabJoin: 'Join room',
+        fabDiscover: 'Discover rooms',
+        bnRooms: 'Rooms',
+        bnChat: 'Chat',
+        bnMedia: 'Call',
+        bnMore: 'More',
+        logo: '🔒 Secure P2P Chat',
+        docsTitle: 'Technical docs',
+        settingsTitle: 'TURN & notification settings',
+        close: 'Close',
+        nicknameLabel: 'Your nickname',
+        nicknamePh: 'e.g. Alex',
+        newRoom: '＋ New room',
+        joinByName: 'Join by name',
+        tabMine: 'My rooms',
+        tabDiscover: 'Discover',
+        searchPh: '🔍 Search rooms...',
+        lobbyOff: 'Lobby is off',
+        lobbyOn: 'Lobby is on',
+        lobbyToggleOn: 'On',
+        lobbyToggleOff: 'Off',
+        infoBox: '🛡️ Messages go directly browser-to-browser (P2P) and are encrypted. “Private” rooms never appear in the public list.',
+        noRoom: 'You haven’t joined a room yet',
+        offline: 'Offline',
+        rooms: 'Rooms',
+        emailInvite: 'Invite by email',
+        copyLink: 'Copy room link',
+        participants: 'Participants & call',
+        leave: 'Leave this room',
+        replyTo: 'Reply to',
+        cancel: 'Cancel',
+        msgPh: 'Type a message...',
+        emoji: 'Emoji',
+        voice: 'Record voice',
+        send: 'Send',
+        recording: 'Recording...',
+        stopSend: 'Stop & send',
+        ready: 'Ready to connect...',
+        users: '👥 Participants',
+        enterRoomHint: 'Join a room',
+        mic: 'Microphone',
+        cam: 'Camera',
+        screen: 'Share screen',
+        you: 'You',
+        anon: 'Anonymous',
+        deleted: 'This message was deleted',
+        newMsgs: '—— New messages ——',
+        welcomeH1: 'Secure P2P Chat',
+        welcomeP: 'Text • voice • files • group audio/video — no server, direct between browsers.<br>Pick a room or create your own.',
+        createRoom: '＋ Create new room',
+        joinRoom: 'Join by room name',
+        onlineN: n => `${n} online`,
+        connected: (n) => `Connected • ${n}`,
+        statusRoom: (id, turn) => `Room “${id}” — ${turn ? 'TURN on' : 'Direct P2P'} • messages encrypted`,
+        visPublic: '🌐 Public',
+        visPrivate: '🔒 Private',
+        visPass: '🔑 Password',
+        banConfirm: name => `Ban “${name}”?`,
+        banned: name => `${name} banned`,
+        banErr: e => 'Ban error: ' + e,
+        leaveConfirm: title => `Leave room “${title}”? Session message history will be cleared.`,
+        needRoomName: 'Enter a room name',
+        joinErr: e => 'Failed to join room: ' + e,
+        bannedYou: r => 'You are banned from this room' + (r ? ': ' + r : ''),
+        roomFull: 'Room is full (member limit reached)',
+        lobbyFail: 'Could not connect to lobby',
+        micCamFail: e => 'Mic/camera access failed: ' + e,
+        screenFail: e => 'Screen share failed: ' + e,
+        voiceFail: 'Voice send failed',
+        micDenied: 'Microphone access denied for voice',
+        fileMax: 'Max file size is 50 MB',
+        fileFail: 'File send failed',
+        editPrompt: 'Edit message:',
+        langBtn: 'FA',
+        roomModalNew: 'New room',
+        roomModalJoin: 'Join room',
+        roomName: 'Room name',
+        roomNamePh: 'e.g. friends',
+        password: 'Password (optional)',
+        visibility: 'Visibility',
+        visPub: 'Public',
+        visPrv: 'Private',
+        asAdmin: 'I am admin (ban & member limit)',
+        maxUsers: 'Max members (optional)',
+        create: 'Create & join',
+        join: 'Join',
+        settingsH: '⚙️ Connection & notification settings',
+        turnLabel: 'TURN server (for restricted networks / mobile carriers)',
+        turnUser: 'TURN username',
+        turnPass: 'TURN password',
+        forceRelay: 'Force Relay (use TURN only — test)',
+        enableNotif: 'Desktop notification for new messages',
+        enableSound: 'Sound for new messages',
+        maxMembers: 'Max members for new rooms (empty = unlimited)',
+        save: 'Save',
+        inviteH: 'Invite to room',
+        invEmail: 'Friend’s email',
+        invMsg: 'Message (optional)',
+        invPwWarn: 'Email is usually not secure. Prefer sharing the password via another channel (e.g. messenger).',
+        invLink: 'Room link',
+        invMailto: '📧 Email app',
+        invCopy: '📋 Copy link',
+        invShare: '📤 Share (messengers...)',
+        invInfo: 'This app has no server; email is sent with your own app/account and only a draft is prepared.',
+        copied: 'Copied',
+        emptyRooms: 'No rooms. Create one or join.',
+        emptyDiscover: 'No rooms discovered. Turn on lobby or try again later.',
+      }
+    };
+
+    let lang = localStorage.getItem('loplop_lang') || 'fa';
+    const t = (key, ...args) => {
+      const v = (I18N[lang] && I18N[lang][key]) ?? (I18N.fa[key]) ?? key;
+      return typeof v === 'function' ? v(...args) : v;
+    };
+
+    function applyStaticI18n() {
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+      document.title = t('title');
+      const splashTitle = document.querySelector('#splash .splash-title');
+      if (splashTitle) splashTitle.textContent = t('splashTitle');
+      const splashSub = document.querySelector('#splash .splash-sub');
+      if (splashSub) splashSub.textContent = t('splashSub');
+
+      const mapTitle = [
+        ['fabMain', 'fabNew'], ['fabJoin', 'fabJoin'], ['fabDiscover', 'fabDiscover'],
+        ['docsBtn', 'docsTitle'], ['settingsBtn', 'settingsTitle'], ['closeSidebar', 'close'],
+        ['menuBtn', 'rooms'], ['emailBtn', 'emailInvite'], ['copyLinkBtn', 'copyLink'],
+        ['panelToggle', 'participants'], ['leaveBtn', 'leave'],
+        ['emojiBtn', 'emoji'], ['voiceBtn', 'voice'], ['cancelReply', 'cancel'],
+        ['ctrlMic', 'mic'], ['ctrlCam', 'cam'], ['ctrlScreen', 'screen'],
+      ];
+      mapTitle.forEach(([id, key]) => {
+        const el = document.getElementById(id);
+        if (el) el.title = t(key);
+      });
+
+      const setText = (sel, key) => {
+        const el = typeof sel === 'string' ? document.querySelector(sel) : sel;
+        if (el) el.textContent = t(key);
+      };
+      setText('#bnRooms span:last-child', 'bnRooms');
+      // bottom nav spans
+      const bnSpans = {
+        bnRooms: 'bnRooms', bnChat: 'bnChat', bnMedia: 'bnMedia', bnMore: 'bnMore'
+      };
+      Object.entries(bnSpans).forEach(([id, key]) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const spans = btn.querySelectorAll('span');
+        if (spans.length) spans[spans.length - 1].textContent = t(key);
+      });
+
+      const logoSpan = document.querySelector('.logo > span');
+      if (logoSpan) logoSpan.textContent = t('logo');
+
+      const nickLabel = document.querySelector('label[for="nickname"]');
+      if (nickLabel) nickLabel.textContent = t('nicknameLabel');
+      const nick = document.getElementById('nickname');
+      if (nick) nick.placeholder = t('nicknamePh');
+
+      setText('#newRoomBtn', 'newRoom');
+      setText('#joinByNameBtn', 'joinByName');
+
+      // tabs keep badge
+      const tabMine = document.getElementById('tabMine');
+      if (tabMine) {
+        const badge = tabMine.querySelector('.badge');
+        tabMine.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ''; });
+        tabMine.insertBefore(document.createTextNode(t('tabMine') + ' '), badge || null);
+      }
+      setText('#tabDiscover', 'tabDiscover');
+
+      const search = document.getElementById('roomSearch');
+      if (search) search.placeholder = t('searchPh');
+
+      const lobbyStatus = document.getElementById('lobbyStatus');
+      // updated dynamically
+
+      const info = document.querySelector('.sidebar .info-box');
+      if (info) info.textContent = t('infoBox');
+
+      setText('#currentRoomTitle', 'noRoom');
+      setText('#connectionStatus', 'offline');
+      setText('#statusBar', 'ready');
+
+      const msgIn = document.getElementById('messageInput');
+      if (msgIn) msgIn.placeholder = t('msgPh');
+
+      // send button text if any
+      const sendBtn = document.getElementById('sendBtn');
+      if (sendBtn && !sendBtn.querySelector('svg')) sendBtn.textContent = t('send');
+
+      const usersH = document.querySelector('.media-panel .panel-head h3, .media-panel h3');
+      // leave as is, dynamic
+
+      const langBtn = document.getElementById('langBtn');
+      if (langBtn) langBtn.textContent = t('langBtn');
+
+
+      // Room modal
+      const rmt = document.getElementById('roomModalTitle');
+      // updated in openRoomModal
+      const rnLab = document.querySelector('label[for="roomNameInput"]');
+      if (rnLab) rnLab.textContent = t('roomName');
+      const rni = document.getElementById('roomNameInput');
+      if (rni) rni.placeholder = t('roomNamePh');
+      const asAdLab = document.querySelector('label[for="asAdmin"]');
+      if (asAdLab) asAdLab.textContent = t('asAdmin');
+      const rmg = document.getElementById('roomModalGo');
+      if (rmg) rmg.textContent = lang==='en' ? 'Join / Create' : 'ورود / ساخت اتاق';
+
+      // Settings modal basic labels
+      const setH = document.querySelector('#settingsModal h3 span');
+      if (setH) setH.textContent = t('settingsH');
+      const forceLab = document.querySelector('label[for="forceRelay"]');
+      if (forceLab) forceLab.textContent = t('forceRelay');
+      const notLab = document.querySelector('label[for="enableNotif"]');
+      if (notLab) notLab.textContent = t('enableNotif');
+      const sndLab = document.querySelector('label[for="enableSound"]');
+      if (sndLab) sndLab.textContent = t('enableSound');
+
+      // Invite modal
+      const invH = document.querySelector('#inviteModal h3 span');
+      if (invH) invH.textContent = t('inviteH');
+      const invCopy = document.getElementById('invCopy');
+      if (invCopy) invCopy.textContent = t('invCopy');
+      const invShare = document.getElementById('invShare');
+      if (invShare) invShare.textContent = t('invShare');
+      const invMailto = document.getElementById('invMailto');
+      if (invMailto) invMailto.textContent = t('invMailto');
+
+      // CSS direction helpers for LTR
+      document.body.classList.toggle('ltr', lang === 'en');
+    }
+
+    function setLang(next) {
+      lang = next;
+      localStorage.setItem('loplop_lang', lang);
+      applyStaticI18n();
+      try { BASE_TITLE = t('title'); document.title = BASE_TITLE; } catch (_) {}
+      try { renderAll(); } catch (_) {}
+      try { renderHeader(); } catch (_) {}
+      try { renderRoomList(); } catch (_) {}
+      try { renderWelcome(); } catch (_) {}
+      try { renderDiscover(); } catch (_) {}
+      try { renderUsers(); } catch (_) {}
+    }
+
+    // Early apply
+    document.addEventListener('DOMContentLoaded', () => {
+      applyStaticI18n();
+      const lb = document.getElementById('langBtn');
+      if (lb) lb.addEventListener('click', () => setLang(lang === 'fa' ? 'en' : 'fa'));
+    });
+    // also apply ASAP
+    applyStaticI18n();
+
+
+    let BASE_TITLE = document.title;
     const SUGGESTED = [
       { id: 'general',  title: 'عمومی',        icon: '💬', desc: 'گپ آزاد درباره هر چیزی' },
       { id: 'dev-talk', title: 'برنامه‌نویسی',  icon: '💻', desc: 'کد، ابزار و تکنولوژی' },
@@ -1131,12 +1523,12 @@
       if (m.kind === 'system') { div.className = 'message system'; div.textContent = m.text; return div; }
       if (m.kind === 'separator') {
         div.className = 'message system'; div.style.cssText = 'opacity:.7;border-top:1px dashed var(--border);padding-top:10px;margin:8px 0';
-        div.textContent = m.text || '—— پیام‌های جدید ——'; return div;
+        div.textContent = m.text || t('newMsgs'); return div;
       }
       div.className = 'message ' + (m.own ? 'own' : 'other');
       if (m.id) div.dataset.mid = m.id;
       const meta = document.createElement('div'); meta.className = 'meta';
-      meta.textContent = m.own ? 'تو' : (m.name || 'ناشناس');
+      meta.textContent = m.own ? t('you') : (m.name || t('anon'));
       if (!m.own) meta.style.color = colorOf(m.name || 'x');
       if (m.edited) meta.textContent += ' (ویرایش‌شده)';
       div.appendChild(meta);
@@ -1146,7 +1538,7 @@
         div.appendChild(q);
       }
       if (m.deleted) {
-        const c = document.createElement('div'); c.style.opacity = '.6'; c.style.fontStyle = 'italic'; c.textContent = 'این پیام حذف شد'; div.appendChild(c);
+        const c = document.createElement('div'); c.style.opacity = '.6'; c.style.fontStyle = 'italic'; c.textContent = t('deleted'); div.appendChild(c);
       } else if (m.kind === 'text') {
         const c = document.createElement('div'); c.dir = 'auto'; c.style.whiteSpace = 'pre-wrap'; linkify(m.text, c); div.appendChild(c);
       } else if (m.kind === 'file') {
@@ -1220,20 +1612,20 @@
     function renderWelcome() {
       el.messages.innerHTML = '';
       const w = document.createElement('div'); w.className = 'welcome';
-      w.innerHTML = '<h1>چت امن P2P</h1><p>متن • ویس • فایل • صوت و تصویر گروهی — بدون سرور، مستقیم بین مرورگرها.<br>یک اتاق انتخاب کن یا اتاق خودت را بساز.</p>';
+      w.innerHTML = '<h1>' + t('welcomeH1') + '</h1><p>' + t('welcomeP') + '</p>';
       const grid = document.createElement('div'); grid.className = 'welcome-grid';
       const counts = computeDiscovered();
       SUGGESTED.forEach(s => {
         const b = document.createElement('button'); b.className = 'topic-card';
         b.innerHTML = `<span class="t-ico">${s.icon}</span><span></span><span class="t-cnt"></span>`;
         b.children[1].textContent = s.title;
-        const n = counts.get(s.id) || 0; b.children[2].textContent = n ? `${n} نفر آنلاین` : s.desc;
+        const n = counts.get(s.id) || 0; b.children[2].textContent = n ? t('onlineN', n) : s.desc;
         b.addEventListener('click', () => enterRoom(s.id, { visibility: 'public' }));
         grid.appendChild(b);
       });
       const row = document.createElement('div'); row.className = 'row'; row.style.maxWidth = '380px';
-      const b1 = document.createElement('button'); b1.textContent = '＋ ساخت اتاق جدید'; b1.addEventListener('click', () => openRoomModal('new'));
-      const b2 = document.createElement('button'); b2.className = 'btn-outline'; b2.textContent = 'ورود با نام اتاق'; b2.addEventListener('click', () => openRoomModal('join'));
+      const b1 = document.createElement('button'); b1.textContent = t('createRoom'); b1.addEventListener('click', () => openRoomModal('new'));
+      const b2 = document.createElement('button'); b2.className = 'btn-outline'; b2.textContent = t('joinRoom'); b2.addEventListener('click', () => openRoomModal('join'));
       row.append(b1, b2);
       w.append(grid, row); el.messages.appendChild(w);
     }
@@ -1246,7 +1638,7 @@
       el.messages.appendChild(frag);
       el.messages.scrollTop = el.messages.scrollHeight;
     }
-    function visLabel(ctx) { return ctx.password ? ['🔑 رمزدار', 'prv'] : ctx.visibility === 'public' ? ['🌐 عمومی', 'pub'] : ['🔒 خصوصی', 'prv']; }
+    function visLabel(ctx) { return ctx.password ? [t('visPass'), 'prv'] : ctx.visibility === 'public' ? [t('visPublic'), 'pub'] : [t('visPrivate'), 'prv']; }
     function renderHeader() {
       const ctx = activeCtx();
       clearTimeout(flashTimer);
@@ -1254,9 +1646,9 @@
       el.inputArea.classList.toggle('hidden', !ctx);
       el.controlBar.classList.toggle('hidden', !ctx);
       if (!ctx) {
-        el.title.textContent = 'هنوز وارد اتاقی نشدی';
-        el.conn.textContent = 'آفلاین'; el.conn.style.color = 'var(--text-muted)';
-        el.statusBar.textContent = 'آماده برای اتصال...';
+        el.title.textContent = t('noRoom');
+        el.conn.textContent = t('offline'); el.conn.style.color = 'var(--text-muted)';
+        el.statusBar.textContent = t('ready');
         return;
       }
       el.title.textContent = '';
@@ -1269,10 +1661,10 @@
         const cls = avg < 120 ? 'good' : avg < 300 ? 'mid' : 'bad';
         pingTxt = ` <span class="conn-pill ${cls}">${avg}ms</span>`;
       }
-      el.conn.innerHTML = `متصل • ${ctx.peers.size + 1} نفر` + pingTxt;
+      el.conn.innerHTML = t('connected', ctx.peers.size + 1) + pingTxt;
       el.conn.style.color = 'var(--success)';
       const turnOn = !!buildTurnConfig();
-      el.statusBar.textContent = `اتاق «${ctx.id.split('~')[0]}» — ${turnOn ? 'TURN فعال' : 'P2P مستقیم'} • پیام‌ها رمزنگاری‌شده`;
+      el.statusBar.textContent = t('statusRoom', ctx.id.split('~')[0], turnOn);
     }
     function roomItem(ctx) {
       const b = document.createElement('button'); b.className = 'room-item' + (ctx.id === S.activeId ? ' active' : '');
@@ -1281,7 +1673,7 @@
       const meta = document.createElement('div'); meta.className = 'room-meta';
       const nm = document.createElement('div'); nm.className = 'room-name'; nm.textContent = roomTitle(ctx.id);
       const sub = document.createElement('div'); sub.className = 'room-sub'; sub.dir = 'auto';
-      sub.textContent = ctx.preview || `${ctx.peers.size + 1} نفر آنلاین`;
+      sub.textContent = ctx.preview || t('onlineN', ctx.peers.size + 1);
       meta.append(nm, sub);
       const side = document.createElement('div'); side.className = 'room-side';
       if (ctx.unread) { const u = document.createElement('span'); u.className = 'badge unread'; u.textContent = ctx.unread > 99 ? '99+' : ctx.unread; side.appendChild(u); }
@@ -1295,11 +1687,11 @@
       const pane = el.paneMine; pane.innerHTML = '';
       if (!S.rooms.size) {
         const n = document.createElement('div'); n.className = 'empty-note';
-        n.innerHTML = 'هنوز در هیچ اتاقی نیستی.<br>از «کشف اتاق‌ها» وارد یک اتاق شو یا اتاق جدید بساز.'; pane.appendChild(n);
+        n.innerHTML = t('emptyRooms'); pane.appendChild(n);
       } else S.rooms.forEach(ctx => pane.appendChild(roomItem(ctx)));
       const recent = store.get('p2p2-recent', []).filter(r => !S.rooms.has(r.id));
       if (recent.length) {
-        const t = document.createElement('div'); t.className = 'section-title'; t.textContent = 'اخیراً'; pane.appendChild(t);
+        const t = document.createElement('div'); t.className = 'section-title'; t.textContent = (lang==='en'?'Recent':'اخیراً'); pane.appendChild(t);
         recent.forEach(r => {
           const b = document.createElement('button'); b.className = 'room-item';
           const ico = document.createElement('div'); ico.className = 'room-ico'; ico.textContent = roomIcon(r.id); ico.style.background = bgOf(r.id); ico.style.color = colorOf(r.id);
@@ -1326,11 +1718,11 @@
           const banBtn = document.createElement('button'); banBtn.className = 'btn-sm btn-danger'; banBtn.textContent = 'بن';
           banBtn.style.padding = '2px 6px'; banBtn.style.fontSize = '.7rem';
           banBtn.addEventListener('click', async () => {
-            if (!confirm(`«${name}» بن شود؟`)) return;
+            if (!confirm(t('banConfirm', name))) return;
             try {
               await ctx.room.ban(userId, { reason: 'توسط ادمین' });
-              toast(`${name} بن شد`);
-            } catch (e) { toast('خطا در بن: ' + (e.message || e)); }
+              toast(t('banned', name));
+            } catch (e) { toast(t('banErr', e.message || e)); }
           });
           d.appendChild(banBtn);
         }
@@ -1403,8 +1795,12 @@
       const list = el.discoverList; list.innerHTML = '';
       let users = 0; if (S.lobby) { try { users = Object.keys(S.lobby.room.getUsers()).length + 1; } catch {} }
       el.lobbyDot.classList.toggle('on', !!S.lobby);
-      el.lobbyStatus.textContent = S.lobby ? `لابی فعال • ${users} کاربر آنلاین` : (S.lobbyStarting ? 'در حال اتصال به لابی...' : 'لابی خاموش است');
-      el.lobbyToggle.textContent = S.lobbyOn ? 'خاموش' : 'روشن';
+      el.lobbyStatus.textContent = S.lobby
+        ? (lang==='en' ? `Lobby on • ${users} online` : `لابی فعال • ${users} کاربر آنلاین`)
+        : (S.lobbyStarting
+            ? (lang==='en' ? 'Connecting to lobby...' : 'در حال اتصال به لابی...')
+            : t('lobbyOff'));
+      el.lobbyToggle.textContent = S.lobbyOn ? t('lobbyToggleOff') : t('lobbyToggleOn');
       const sec = t => { const d = document.createElement('div'); d.className = 'section-title'; d.textContent = t; list.appendChild(d); };
       const match = (id, title) => !q || id.toLowerCase().includes(q) || title.toLowerCase().includes(q);
       const sug = SUGGESTED.filter(s => match(s.id, s.title));
@@ -1417,7 +1813,10 @@
       if (others.length) others.forEach(([id, n]) => list.appendChild(discCard(id, id, id[0].toUpperCase(), `${n} نفر آنلاین`)));
       else {
         const n = document.createElement('div'); n.className = 'empty-note';
-        n.textContent = S.lobby ? (q ? 'اتاقی با این نام پیدا نشد.' : 'فعلاً اتاق عمومی دیگری فعال نیست. خودت یکی بساز!') : 'برای دیدن اتاق‌های عمومی دیگران، لابی را روشن کن.';
+        n.textContent = S.lobby
+          ? (q ? (lang==='en'?'No room with that name.':'اتاقی با این نام پیدا نشد.')
+               : (lang==='en'?'No other public rooms active. Create one!':'فعلاً اتاق عمومی دیگری فعال نیست. خودت یکی بساز!'))
+          : (lang==='en'?'Turn on the lobby to see public rooms.':'برای دیدن اتاق‌های عمومی دیگران، لابی را روشن کن.');
         list.appendChild(n);
       }
       if (q && !SUGGESTED.some(s => s.id === q) && q.length <= 40) {
@@ -1436,7 +1835,7 @@
         S.lobby = { room, st, selfUserId: self.userId };
         st.onChange(scheduleDiscover); room.onUserJoin(scheduleDiscover); room.onUserLeave(scheduleDiscover);
         announce();
-      } catch (e) { console.error(e); S.lobby = null; toast('اتصال به لابی ممکن نشد'); }
+      } catch (e) { console.error(e); S.lobby = null; toast(t('lobbyFail')); }
       S.lobbyStarting = false; renderDiscover();
     }
     async function stopLobby() {
@@ -1465,7 +1864,7 @@
     }
     async function enterRoom(rawId, { password = '', visibility = 'public', asAdmin = false, maxUsers = null } = {}) {
       let id = String(rawId || '').trim().slice(0, 80);
-      if (!id) { toast('نام اتاق را وارد کن'); return; }
+      if (!id) { toast(t('needRoomName')); return; }
       // If joining a roles room (contains ~), keep full id
       if (S.rooms.has(id)) { switchRoom(id); return; }
       if (S.joining.has(id)) return;
@@ -1519,7 +1918,7 @@
         addSys(ctx, `وارد اتاق «${roomTitle(id)}» شدی`);
         announce();
       } catch (err) {
-        console.error(err); toast('خطا در اتصال به اتاق: ' + (err.message || err)); renderHeader();
+        console.error(err); toast(t('joinErr', err.message || err)); renderHeader();
       } finally { S.joining.delete(id); }
     }
     function bindRoom(ctx) {
@@ -1611,8 +2010,8 @@
       room.onError(err => {
         console.warn(err);
         const code = err?.code || '';
-        if (code === 'banned') toast('شما از این اتاق بن شده‌اید' + (err.reason ? ': ' + err.reason : ''));
-        else if (code === 'room-full') toast('اتاق پر است (حداکثر اعضا رسیده)');
+        if (code === 'banned') toast(t('bannedYou', err.reason || ''));
+        else if (code === 'room-full') toast(t('roomFull'));
         else toast(err.message || 'خطای اتاق');
       });
     }
@@ -1635,7 +2034,7 @@
     }
     async function leaveRoomCtx(ctx) {
       if (!ctx) return;
-      if (!confirm(`از اتاق «${roomTitle(ctx.id)}» خارج می‌شوی؟ تاریخچه پیام‌های این نشست پاک می‌شود.`)) return;
+      if (!confirm(t('leaveConfirm', roomTitle(ctx.id)))) return;
       if (rec.ctx === ctx) stopVoiceRecording(true);
       if (media.ctx === ctx) await stopAllMedia();
       [...ctx.tiles.keys()].forEach(k => removeTile(ctx, k));
@@ -1708,7 +2107,7 @@
         addTile(ctx, 'local:cam', stream, S.nickname, ' (تو)', true);
         addSys(ctx, wantVideo ? 'دوربین و میکروفون روشن شد' : 'میکروفون روشن شد');
       } catch (err) {
-        releaseIfIdle(); toast('دسترسی به میکروفون/دوربین ممکن نشد: ' + (err.message || err.name));
+        releaseIfIdle(); toast(t('micCamFail', err.message || err.name));
       }
       updateMediaButtons(); renderUsers();
     }
@@ -1749,7 +2148,7 @@
         addSys(ctx, 'اشتراک صفحه شروع شد');
       } catch (err) {
         media.screen = null; media.sharing = false; releaseIfIdle();
-        if (err.name !== 'NotAllowedError') toast('اشتراک صفحه ممکن نشد: ' + err.message);
+        if (err.name !== 'NotAllowedError') toast(t('screenFail', err.message));
       }
       updateMediaButtons();
     }
@@ -1775,12 +2174,12 @@
             showProgress(10);
             await c.act.voice.send(blob, { metadata: { type: 'voice', mime: type, duration: dur }, onProgress: p => showProgress(toPct(p)) });
             addMsg(c, { kind: 'voice', own: true, url: URL.createObjectURL(blob) });
-          } catch (err) { console.error(err); toast('ارسال ویس ناموفق بود'); }
+          } catch (err) { console.error(err); toast(t('voiceFail')); }
         };
         r.start(200);
         el.recTime.textContent = '0'; el.recInd.classList.add('active'); el.voiceBtn.disabled = true;
         rec.timer = setInterval(() => { rec.sec++; el.recTime.textContent = rec.sec; if (rec.sec >= 60) stopVoiceRecording(); }, 1000);
-      } catch (err) { toast('دسترسی به میکروفون برای ویس داده نشد'); }
+      } catch (err) { toast(t('micDenied')); }
     }
     function stopVoiceRecording(discard = false) {
       if (!rec.recorder) return;
@@ -1790,13 +2189,13 @@
     }
     async function sendFile(file) {
       const ctx = activeCtx(); if (!ctx) return;
-      if (file.size > MAX_FILE) { toast('حداکثر حجم فایل ۵۰ مگابایت است'); return; }
+      if (file.size > MAX_FILE) { toast(t('fileMax')); return; }
       try {
         showProgress(5);
         await ctx.act.file.send(file, { metadata: { name: file.name, size: file.size, type: file.type }, onProgress: p => showProgress(toPct(p)) });
         showProgress(100);
         addMsg(ctx, { kind: 'file', own: true, fileName: file.name, size: file.size, mime: file.type, url: URL.createObjectURL(file) });
-      } catch (err) { console.error(err); toast('ارسال فایل ناموفق بود'); }
+      } catch (err) { console.error(err); toast(t('fileFail')); }
     }
 
     function setReply(m) {
@@ -1811,10 +2210,10 @@
       $('replyBar').classList.add('hidden');
     }
     function startEdit(m) {
-      const t = prompt('ویرایش پیام:', m.text);
-      if (t == null || t.trim() === m.text) return;
+      const edited = prompt(t('editPrompt'), m.text);
+      if (edited == null || edited.trim() === m.text) return;
       const ctx = activeCtx(); if (!ctx) return;
-      ctx.act.mod.send({ type: 'edit', id: m.id, text: t.trim() }).catch(console.error);
+      ctx.act.mod.send({ type: 'edit', id: m.id, text: edited.trim() }).catch(console.error);
       m.text = t.trim(); m.edited = true; renderMessages();
     }
     function deleteMsg(id) {
@@ -1862,7 +2261,7 @@
     const getVis = () => document.querySelector('input[name="vis"]:checked').value;
     function syncPwGroup() { el.pwGroup.classList.toggle('hidden', getVis() !== 'private'); }
     function openRoomModal(mode, pre = {}) {
-      el.roomModalTitle.textContent = mode === 'new' ? 'اتاق جدید' : 'ورود به اتاق';
+      el.roomModalTitle.textContent = mode === 'new' ? t('roomModalNew') : t('roomModalJoin');
       el.roomNameInput.value = pre.id || '';
       visRadios().forEach(r => r.checked = r.value === (pre.vis || 'public'));
       el.roomPw.value = ''; syncPwGroup();
@@ -1877,7 +2276,7 @@
     }
     function closeModals() { el.roomModal.classList.add('hidden'); el.inviteModal.classList.add('hidden'); $('settingsModal')?.classList.add('hidden'); $('docsModal')?.classList.add('hidden'); }
     function submitRoomModal() {
-      const id = el.roomNameInput.value.trim(); if (!id) { toast('نام اتاق را وارد کن'); el.roomNameInput.focus(); return; }
+      const id = el.roomNameInput.value.trim(); if (!id) { toast(t('needRoomName')); el.roomNameInput.focus(); return; }
       const vis = getVis(); const pw = vis === 'private' ? el.roomPw.value.trim() : '';
       const asAdmin = !!document.getElementById('asAdmin')?.checked;
       const maxU = document.getElementById('maxUsersInput')?.value;
@@ -1986,7 +2385,7 @@ ${pwLine}
     el.backdrop.addEventListener('click', closeDrawers);
 
     el.emailBtn.addEventListener('click', openInvite);
-    el.copyLinkBtn.addEventListener('click', () => { const c = activeCtx(); if (c) copyText(roomLink(c), 'لینک اتاق کپی شد'); });
+    el.copyLinkBtn.addEventListener('click', () => { const c = activeCtx(); if (c) copyText(roomLink(c), lang==='en'?'Room link copied': 'لینک اتاق کپی شد'); });
     el.leaveBtn.addEventListener('click', () => leaveRoomCtx(activeCtx()));
     el.invBase.addEventListener('input', () => { store.set('p2p2-base', el.invBase.value.trim()); buildInvite(); });
     el.invPw.addEventListener('change', buildInvite);
@@ -1994,7 +2393,7 @@ ${pwLine}
     el.invMailto.addEventListener('click', sendMailto);
     el.invGmail.addEventListener('click', () => sendWeb('gmail'));
     el.invOutlook.addEventListener('click', () => sendWeb('outlook'));
-    el.invCopy.addEventListener('click', () => copyText(el.invLink.value, 'لینک کپی شد'));
+    el.invCopy.addEventListener('click', () => copyText(el.invLink.value, t('copied')));
     el.invShare.addEventListener('click', () => {
       const ctx = activeCtx(); if (!ctx) return;
       navigator.share({ title: el.invSubject.value, text: el.invBody.value, url: el.invLink.value }).catch(() => {});
